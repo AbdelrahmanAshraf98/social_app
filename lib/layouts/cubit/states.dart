@@ -11,4 +11,6 @@ class HomeGetUserErrorState extends HomeStates{
   HomeGetUserErrorState(this.error);
 }
 
-class HomeChangeBottomNav extends HomeStates{}
+class HomeChangeBottomNavState extends HomeStates{}
+
+class HomeNewPostState extends HomeStates{}

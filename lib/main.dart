@@ -49,7 +49,14 @@ class MyApp extends StatelessWidget {
                     systemOverlayStyle: SystemUiOverlayStyle(
                       statusBarColor: Colors.white,
                       statusBarIconBrightness: Brightness.dark,
-                    ))),
+                    )),
+                bottomNavigationBarTheme: BottomNavigationBarThemeData(
+                  selectedItemColor: Colors.deepPurple,
+                  unselectedItemColor: Colors.grey,
+                  type: BottomNavigationBarType.fixed,
+                )
+            ),
+
             home: widget,
           );
         },

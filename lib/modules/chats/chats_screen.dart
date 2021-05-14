@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-class FeedsScreen extends StatelessWidget {
-  const FeedsScreen({Key key}) : super(key: key);
-
+class ChatsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
