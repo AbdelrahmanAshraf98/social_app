@@ -15,6 +15,12 @@ dependencies:
   cupertino_icons: ^1.0.2
   bloc: ^7.0.0
   flutter_bloc: ^7.0.0
+  firebase_core: ^1.1.1
+  firebase_auth: ^1.1.4
+  fluttertoast: ^8.0.6
+  conditional_builder: ^1.0.2
+  cloud_firestore: ^2.1.0
+  shared_preferences: ^2.0.5
 
 dev_dependencies:
   flutter_test:
@@ -23,4 +29,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images
+    - assets/images/
+
+  fonts:
+    - family: IconBroken
+      fonts:
+        - asset: assets/fonts/icons.ttf
