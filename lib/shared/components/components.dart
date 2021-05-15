@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:social_app/shared/styles/icon_broken.dart';
 
 void showToast({@required String msg, @required Color color}) {
   Fluttertoast.showToast(
@@ -12,14 +13,33 @@ void showToast({@required String msg, @required Color color}) {
       fontSize: 16.0);
 }
 
+Widget defaultAppBar({
+  @required BuildContext context,
+  String txt,
+  List<Widget> actions,
+}) =>
+    AppBar(
+      titleSpacing: 5.0,
+      leading: IconButton(icon: Icon(IconBroken.Arrow___Left_2,color: Colors.deepPurple,),onPressed: (){
+        Navigator.pop(context);
+      },),
+      title: Text(txt,style: TextStyle(color: Colors.deepPurple),),
+      actions: actions,
+    );
+
 Widget defaultTextButton({
   @required String text,
   @required Function fn,
 }) {
-  return TextButton(onPressed: fn, child: Text(text.toUpperCase(),style: TextStyle(
-    color: Colors.deepPurple,
-    fontWeight: FontWeight.w600,
-  ),));
+  return TextButton(
+      onPressed: fn,
+      child: Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          color: Colors.deepPurple,
+          fontWeight: FontWeight.w600,
+        ),
+      ));
 }
 
 Widget defaultTextFormField({

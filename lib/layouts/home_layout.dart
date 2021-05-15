@@ -1,5 +1,3 @@
-import 'package:conditional_builder/conditional_builder.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:social_app/layouts/cubit/cubit.dart';
@@ -54,7 +52,7 @@ class HomeLayout extends StatelessWidget {
               BottomNavigationBarItem(
                   icon: Icon(IconBroken.Location), label: 'Users'),
               BottomNavigationBarItem(
-                  icon: Icon(IconBroken.Setting), label: 'Settings'),
+                  icon: Icon(IconBroken.Profile), label: 'Profile'),
             ],
             currentIndex: cubit.currentIndex,
           ),
