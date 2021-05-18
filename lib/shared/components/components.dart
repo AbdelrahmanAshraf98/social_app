@@ -92,11 +92,13 @@ Widget defaultMaterialButton({
           ),
         ));
 
-navigateTo(Widget route, context) => Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => route,
-    ));
+navigateTo(Widget route, context){
+  Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => route,
+      ));
+}
 
 navigateAndFinish(Widget route, context) => Navigator.pushAndRemoveUntil(
         context,
@@ -105,3 +107,5 @@ navigateAndFinish(Widget route, context) => Navigator.pushAndRemoveUntil(
         ), (route) {
       return false;
     });
+
+

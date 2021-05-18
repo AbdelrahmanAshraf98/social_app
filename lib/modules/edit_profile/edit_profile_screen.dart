@@ -157,7 +157,7 @@ class EditProfileScreen extends StatelessWidget {
                       if (value.isEmpty) return 'Phone must not be empty';
                       return null;
                     },
-                    label: 'Bio',
+                    label: 'Phone',
                     prefix: IconBroken.Call,
                   ),
                 ],

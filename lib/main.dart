@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => HomeCubit()..getUserData(),
+      create: (context) => HomeCubit()..getUserData()..getPosts(),
       child: BlocConsumer<HomeCubit,HomeStates>(
         listener:(context, state) {},
         builder: (context, state) {

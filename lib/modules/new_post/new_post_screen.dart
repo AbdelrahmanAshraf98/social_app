@@ -19,6 +19,7 @@ class NewPostScreen extends StatelessWidget {
               child: TextButton(
                   onPressed: () {
                     HomeCubit.get(context).createNewPost(text:textController.text,dateTime: DateTime.now().toString() );
+                    textController.text = '';
                   },
                   child: Text(
                     'POST',
@@ -61,9 +62,11 @@ class NewPostScreen extends StatelessWidget {
                 Expanded(
                   child: TextFormField(
                     controller: textController,
-                    keyboardType: TextInputType.text,
+                    textInputAction: TextInputAction.newline,
+                    keyboardType: TextInputType.multiline,
+                    maxLines: null,
                     decoration: InputDecoration(
-                        hintText: 'What is in your mind...',
+                        hintText: 'What\'s on your mind, ${HomeCubit.get(context).userModel.name.split(' ')[0]}?',
                         border: InputBorder.none),
                   ),
                 ),
@@ -91,6 +94,7 @@ class NewPostScreen extends StatelessWidget {
                               icon: Icon(Icons.close),
                               onPressed: () {
                                 HomeCubit.get(context).removePostImage();
+
                               }),
                         ),
                       ),

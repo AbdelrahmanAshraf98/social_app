@@ -11,6 +11,15 @@ class HomeGetUserErrorState extends HomeStates{
   HomeGetUserErrorState(this.error);
 }
 
+class HomeGetPostsSuccessState extends HomeStates{}
+
+class HomeGetPostsLoadingState extends HomeStates{}
+
+class HomeGetPostsErrorState extends HomeStates{
+  final String error;
+  HomeGetPostsErrorState(this.error);
+}
+
 class HomeChangeBottomNavState extends HomeStates{}
 
 class HomeNewPostState extends HomeStates{}
@@ -57,3 +66,17 @@ class CreatePostLoadingState extends HomeStates{}
 class CreatePostSuccessState extends HomeStates{}
 
 class CreatePostErrorState extends HomeStates{}
+
+class LikePostSuccessState extends HomeStates{}
+
+class LikePostErrorState extends HomeStates{}
+
+class CommentSuccessState extends HomeStates{}
+
+class CommentErrorState extends HomeStates{}
+
+class GetCommentSuccessState extends HomeStates{}
+
+class GetCommentErrorState extends HomeStates{}
+
+class GetCommentLoadingState extends HomeStates{}

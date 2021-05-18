@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:social_app/layouts/cubit/states.dart';
+import 'package:social_app/models/comment_model.dart';
 import 'package:social_app/models/post_model.dart';
 import 'package:social_app/models/user_model.dart';
 import 'package:social_app/modules/chats/chats_screen.dart';
@@ -124,7 +125,7 @@ class HomeCubit extends Cubit<HomeStates> {
       uploadProfileImage();
     } else {
       emit(ProfileImagePickedErrorState());
-      showToast(msg: 'No Image Selected', color: Colors.amber.withOpacity(0.6));
+      showToast(msg: 'No Image Selected', color: Colors.grey.withOpacity(0.6));
     }
   }
 
@@ -154,7 +155,7 @@ class HomeCubit extends Cubit<HomeStates> {
     }
   }
 
-  void removePostImage(){
+  void removePostImage() {
     postImage = null;
     emit(PostImageRemoveState());
   }
@@ -172,7 +173,7 @@ class HomeCubit extends Cubit<HomeStates> {
       email: userModel.email,
       userID: userModel.userID,
       cover: coverImageUrl != '' ? coverImageUrl : userModel.cover,
-      image:  profileImageUrl != '' ? profileImageUrl : userModel.image,
+      image: profileImageUrl != '' ? profileImageUrl : userModel.image,
       isEmailVerified: false,
     );
     FirebaseFirestore.instance
@@ -190,9 +191,12 @@ class HomeCubit extends Cubit<HomeStates> {
   void createNewPost({
     @required String text,
     @required String dateTime,
-}){
+  }) {
     emit(CreatePostLoadingState());
+    print(userModel.image);
     PostModel post = PostModel(
+      image: userModel.image,
+      name: userModel.name,
       userID: uId,
       text: text,
       dateTime: dateTime,
@@ -202,11 +206,96 @@ class HomeCubit extends Cubit<HomeStates> {
         .collection('posts')
         .add(post.toMap())
         .then((value) {
+      removePostImage();
       emit(CreatePostSuccessState());
+      getPosts();
     }).catchError((error) {
       emit(CreatePostErrorState());
     });
   }
+
+  List<PostModel> posts = [];
+  List<String> postsID = [];
+  List<int> postsLikes = [];
+
+  void getPosts() {
+    emit(HomeGetPostsLoadingState());
+    posts = [];
+    postsID = [];
+    FirebaseFirestore.instance.collection('posts').get().then((value) {
+      value.docs.forEach((element) {
+        element.reference.collection('likes').get().then((value) {
+          postsLikes.add(value.docs.length);
+          posts.add(PostModel.fromJson(element.data()));
+          postsID.add(element.id);
+        });
+      });
+      emit(HomeGetPostsSuccessState());
+    }).catchError((error) {
+      emit(HomeGetPostsErrorState(error.toString()));
+    });
+  }
+
+  void likePost({String postId}) {
+    FirebaseFirestore.instance
+        .collection('posts')
+        .doc(postId)
+        .collection('likes')
+        .doc(uId)
+        .set({'like': true}).then((value) {
+      emit(LikePostSuccessState());
+    }).catchError((error) {
+      emit(LikePostErrorState());
+    });
+  }
+
+  CommentModel comment;
+  List<CommentModel> comments = [];
+
+  void getComment({String postId}) {
+    comments = [];
+    emit(GetCommentLoadingState());
+    FirebaseFirestore.instance.collection('posts').doc(postId).get().then((value) {
+      value.reference.collection('comments').get().then((value) {
+        value.docs.forEach((element) {
+          comments.add(CommentModel.fromJson(element.data()));
+        });
+        emit(GetCommentSuccessState());
+      });
+      // value.forEach((element) {
+      //   element.reference.collection('comments').get().then((value) {
+      //     print(element.data());
+      //     value.docs.forEach((e) {
+      //       // print(e.data());
+      //       comments.add(CommentModel.fromJson(e.data()));
+      //     });
+      //     emit(GetCommentSuccessState());
+      //   });
+      // });
+    }).catchError((error){
+      emit(GetCommentErrorState());
+    });
+  }
+
+  void addComment({String postId, String comment}) {
+    FirebaseFirestore.instance
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc()
+        .set({
+      'comment': comment,
+      'time': DateTime.now(),
+      'image': userModel.image,
+      'name': userModel.name
+    }).then((value) {
+      emit(CommentSuccessState());
+      getComment(postId: postId);
+    }).catchError((error) {
+      emit(CommentErrorState());
+    });
+  }
+
 
 
 }
