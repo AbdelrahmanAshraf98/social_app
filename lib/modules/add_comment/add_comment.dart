@@ -214,7 +214,6 @@ Widget buildPost(context, PostModel model, String index,List<CommentModel>commen
                                   ],
                                 ),
                                 Text(comments[index].comment),
-
                               ],
                             )
                           ),

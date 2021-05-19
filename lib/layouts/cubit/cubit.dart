@@ -7,10 +7,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:social_app/layouts/cubit/states.dart';
 import 'package:social_app/models/comment_model.dart';
+import 'package:social_app/models/message_model.dart';
 import 'package:social_app/models/post_model.dart';
 import 'package:social_app/models/user_model.dart';
-import 'package:social_app/modules/chats/chats_screen.dart';
 import 'package:social_app/modules/feeds/feeds_screen.dart';
+import 'package:social_app/modules/list_of_chats/chat_screen.dart';
 import 'package:social_app/modules/new_post/new_post_screen.dart';
 import 'package:social_app/modules/profile/profile_screen.dart';
 import 'package:social_app/modules/users/users_screen.dart';
@@ -38,7 +39,7 @@ class HomeCubit extends Cubit<HomeStates> {
   int currentIndex = 0;
   List<Widget> screens = [
     FeedsScreen(),
-    ChatsScreen(),
+    ListOFChatsScreen(),
     NewPostScreen(),
     UsersScreen(),
     ProfileScreen(),
@@ -46,6 +47,8 @@ class HomeCubit extends Cubit<HomeStates> {
   List<String> titles = ['News Feeds', 'Chats', 'New Post', 'Users', 'Profile'];
 
   void changeBottomNav(int index) {
+    if(index == 1)
+      getAllUsers();
     if (index == 2)
       emit(HomeNewPostState());
     else {
@@ -217,6 +220,7 @@ class HomeCubit extends Cubit<HomeStates> {
   List<PostModel> posts = [];
   List<String> postsID = [];
   List<int> postsLikes = [];
+  List<int> postsComments = [];
 
   void getPosts() {
     emit(HomeGetPostsLoadingState());
@@ -229,6 +233,10 @@ class HomeCubit extends Cubit<HomeStates> {
           posts.add(PostModel.fromJson(element.data()));
           postsID.add(element.id);
         });
+        //TODO:get comments number for each post
+        // element.reference.collection('comments').get().then((value) {
+        //   postsComments.add(value.docs.length);
+        // });
       });
       emit(HomeGetPostsSuccessState());
     }).catchError((error) {
@@ -262,16 +270,6 @@ class HomeCubit extends Cubit<HomeStates> {
         });
         emit(GetCommentSuccessState());
       });
-      // value.forEach((element) {
-      //   element.reference.collection('comments').get().then((value) {
-      //     print(element.data());
-      //     value.docs.forEach((e) {
-      //       // print(e.data());
-      //       comments.add(CommentModel.fromJson(e.data()));
-      //     });
-      //     emit(GetCommentSuccessState());
-      //   });
-      // });
     }).catchError((error){
       emit(GetCommentErrorState());
     });
@@ -296,6 +294,70 @@ class HomeCubit extends Cubit<HomeStates> {
     });
   }
 
+  List<UserModel> users=[];
 
+  void getAllUsers(){
+    users=[];
+    emit(HomeGetAllUsersLoadingState());
+    FirebaseFirestore.instance.collection('users').get().then((value) {
+      value.docs.forEach((element){
+        if(element.data()['uID'] != userModel.userID)
+          users.add(UserModel.fromJson(element.data()));
+      });
+    }).then((value) {
+      emit(HomeGetAllUsersSuccessState());
+    }).catchError((error){
+      emit(HomeGetAllUsersErrorState(error));
+    });
+  }
 
+  void sendMessage({
+  @required String text,
+  @required String dateTime,
+  @required String receiverID,
+}){
+    MessageModel model = MessageModel(text, receiverID, userModel.userID, dateTime);
+    FirebaseFirestore.instance
+    .collection('users')
+    .doc(userModel.userID)
+    .collection('chats')
+    .doc(receiverID)
+    .collection('messages')
+    .add(model.toMap()).then((value) {
+      emit(SendMessageSuccessState());
+    }).catchError((error){
+      emit(SendMessageErrorState());
+    });
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(receiverID)
+        .collection('chats')
+        .doc(userModel.userID)
+        .collection('messages')
+        .add(model.toMap()).then((value) {
+      emit(SendMessageSuccessState());
+    }).catchError((error){
+      emit(SendMessageErrorState());
+    });
+  }
+
+  List<MessageModel> messages = [];
+  void getMessages({@required String receiverID}){
+    emit(GetMessagesLoadingState());
+    FirebaseFirestore.instance
+    .collection('users')
+    .doc(userModel.userID)
+    .collection('chats')
+    .doc(receiverID)
+    .collection('messages')
+    .orderBy('dateTime')
+    .snapshots()
+    .listen((event) {
+      messages = [];
+      event.docs.forEach((element) {
+          messages.add(MessageModel.fromJson(element.data()));
+      });
+      emit(GetMessagesSuccessState());
+    });
+  }
 }

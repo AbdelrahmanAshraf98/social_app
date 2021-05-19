@@ -23,7 +23,7 @@ class UserModel {
     name = json['name'];
     email = json['email'];
     phone = json['phone'];
-    userID = json['uId'];
+    userID = json['uID'];
     image = json['image'];
     cover = json['cover'];
     bio = json['bio'];

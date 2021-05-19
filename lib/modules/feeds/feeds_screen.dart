@@ -279,7 +279,10 @@ Widget buildPost(context,PostModel model,int index) => Card(
                   ),
                   Expanded(
                     child: InkWell(
-                      onTap: () {},
+                      onTap: () {
+                        HomeCubit.get(context).getComment(postId: HomeCubit.get(context).postsID[index]);
+                        navigateTo(AddCommentScreen(index),context);
+                      },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -291,7 +294,7 @@ Widget buildPost(context,PostModel model,int index) => Card(
                             width: 5.0,
                           ),
                           Text(
-                            '0 Comments',
+                            'Comments',
                             style: Theme.of(context).textTheme.caption,
                           )
                         ],
@@ -316,26 +319,26 @@ Widget buildPost(context,PostModel model,int index) => Card(
               child: Row(
                 children: [
                   Expanded(
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundImage: NetworkImage(HomeCubit.get(context).userModel.image),
-                          radius: 15.0,
-                        ),
-                        SizedBox(
-                          width: 10.0,
-                        ),
-                        InkWell(
-                          onTap: (){
-                            HomeCubit.get(context).getComment(postId: HomeCubit.get(context).postsID[index]);
-                            navigateTo(AddCommentScreen(index),context);
-                          },
-                          child: Text(
+                    child: InkWell(
+                     onTap: (){
+                       HomeCubit.get(context).getComment(postId: HomeCubit.get(context).postsID[index]);
+                       navigateTo(AddCommentScreen(index),context);
+                     },
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: NetworkImage(HomeCubit.get(context).userModel.image),
+                            radius: 15.0,
+                          ),
+                          SizedBox(
+                            width: 10.0,
+                          ),
+                          Text(
                             'Write a comment...',
                             style: TextStyle(color: Colors.grey),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   InkWell(
