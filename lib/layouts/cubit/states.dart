@@ -65,6 +65,18 @@ class CoverImageUploadLoadingState extends HomeStates {}
 
 class CoverImageUploadErrorState extends HomeStates {}
 
+class ChatImageUploadSuccessState extends HomeStates {}
+
+class ChatImageUploadLoadingState extends HomeStates {}
+
+class ChatImageUploadErrorState extends HomeStates {}
+
+class ChatImagePickedSuccessState extends HomeStates {}
+
+class ChatImagePickedErrorState extends HomeStates {}
+
+class ChatImageRemoveState extends HomeStates {}
+
 class UpdateUserErrorState extends HomeStates {}
 
 class UpdateUserLoadingState extends HomeStates {}

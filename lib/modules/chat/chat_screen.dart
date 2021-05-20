@@ -13,6 +13,7 @@ class ChatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Builder(builder: (context) {
+      // print(MediaQuery.of(context).size.width);
       HomeCubit.get(context)
           .getMessages(receiverID: HomeCubit.get(context).users[index].userID);
 
@@ -40,8 +41,9 @@ class ChatScreen extends StatelessWidget {
                         color: Colors.deepPurple),
                   ),
                   Spacer(),
-                  IconButton(icon: Icon(IconBroken.Call), onPressed: (){}),
-                  IconButton(icon: Icon(IconBroken.Info_Square), onPressed: (){}),
+                  IconButton(icon: Icon(IconBroken.Call), onPressed: () {}),
+                  IconButton(
+                      icon: Icon(IconBroken.Info_Square), onPressed: () {}),
                 ],
               ),
             ),
@@ -58,12 +60,16 @@ class ChatScreen extends StatelessWidget {
                           if (HomeCubit.get(context).messages[index].senderID ==
                               uId)
                             return myBubble(
-                                HomeCubit.get(context).messages[index].text,
-                              HomeCubit.get(context).messages[index].dateTime,
-                            );
-                          return bubble(
                               HomeCubit.get(context).messages[index].text,
                               HomeCubit.get(context).messages[index].dateTime,
+                              HomeCubit.get(context).messages[index].image,
+                              context,
+                            );
+                          return bubble(
+                            HomeCubit.get(context).messages[index].text,
+                            HomeCubit.get(context).messages[index].dateTime,
+                            HomeCubit.get(context).messages[index].image,
+                            context,
                           );
                         },
                         separatorBuilder: (context, index) => SizedBox(
@@ -84,49 +90,64 @@ class ChatScreen extends StatelessWidget {
                             width: 1.0,
                           ),
                         ),
-                        child: Row(
+                        child: Column(
                           children: [
-                            Expanded(
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 10.0),
-                                child: TextFormField(
-                                  controller: msgController,
-                                  decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      hintText: 'Type a message'),
+                            if(HomeCubit.get(context).chatImage != null)
+                              Container(
+                                child: Image(image: FileImage(HomeCubit.get(context).chatImage),),
+                                height: 100,
+                              ),
+                            if(state is ChatImageUploadLoadingState)
+                              LinearProgressIndicator(),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10.0),
+                                    child: TextFormField(
+                                      controller: msgController,
+                                      decoration: InputDecoration(
+                                          border: InputBorder.none,
+                                          hintText: 'Type a message'),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                Icons.attach_file,
-                                color: Colors.deepPurple,
-                              ),
-                              onPressed: () {},
-                            ),
-                            Container(
-                              height: 50.0,
-                              color: Colors.deepPurple,
-                              child: MaterialButton(
-                                minWidth: 1.0,
-                                onPressed: () {
-                                  if(msgController.text != '') {
-                                    HomeCubit.get(context).sendMessage(
-                                      text: msgController.text,
-                                      dateTime: DateTime.now().toString(),
-                                      receiverID: HomeCubit.get(context)
-                                          .users[index]
-                                          .userID,
-                                    );
-                                    msgController.clear();
-                                  }
-                                },
-                                child: Icon(
-                                  IconBroken.Send,
-                                  color: Colors.white,
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.attach_file,
+                                    color: Colors.deepPurple,
+                                  ),
+                                  onPressed: () {
+                                    HomeCubit.get(context).getChatImage();
+                                  },
                                 ),
-                              ),
+                                Container(
+                                  height: 50.0,
+                                  color: state is ChatImageUploadLoadingState ? Colors.grey : Colors.deepPurple,
+                                  child: MaterialButton(
+                                    minWidth: 1.0,
+                                    onPressed:state is ChatImageUploadLoadingState ? null: () {
+                                      if (msgController.text != '' || HomeCubit.get(context).chatImageUrl != null) {
+                                        HomeCubit.get(context).sendMessage(
+                                          text: msgController.text,
+                                          dateTime: DateTime.now().toString(),
+                                          receiverID: HomeCubit.get(context)
+                                              .users[index]
+                                              .userID,
+                                          image: HomeCubit.get(context).chatImageUrl ,
+                                        );
+                                        msgController.clear();
+                                        HomeCubit.get(context).removeChatImage();
+                                      }
+                                    },
+                                    child: Icon(
+                                      IconBroken.Send,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -146,10 +167,12 @@ class ChatScreen extends StatelessWidget {
   }
 }
 
-Widget bubble(String txt,String time) => Align(
+Widget bubble(String txt, String time,String image, context) => Align(
       alignment: AlignmentDirectional.centerStart,
       child: Container(
-        width: txt.length < 30 ?  txt.length.toDouble()*11: txt.length.toDouble()*5,
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.7,
+        ),
         padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
         decoration: BoxDecoration(
             color: Colors.grey[300],
@@ -158,26 +181,41 @@ Widget bubble(String txt,String time) => Align(
               topRight: Radius.circular(10.0),
               topLeft: Radius.circular(10.0),
             )),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+        child: Wrap(
+          alignment: WrapAlignment.end,
+          crossAxisAlignment: WrapCrossAlignment.end,
           children: [
-            Expanded(
-              child: Text(
-                txt,
-                style: TextStyle(fontSize: 15.0),
+            if(image != null)
+              Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: Container(
+                child: Image(
+                  image: NetworkImage(image),
+                ),
               ),
             ),
-            SizedBox(width: 5.0,),
-            Text(time.substring(11,16)+" pm",style: TextStyle(fontSize:12.0),),
+            Text(
+              txt,
+              style: TextStyle(fontSize: 15.0),
+            ),
+            SizedBox(
+              width: 5.0,
+            ),
+            Text(
+              time.substring(11, 16) + " pm",
+              style: TextStyle(fontSize: 12.0),
+            ),
           ],
         ),
-
       ),
     );
 
-Widget myBubble(String txt,String time) => Align(
+Widget myBubble(String txt, String time,String image, context) => Align(
       alignment: AlignmentDirectional.centerEnd,
       child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.7,
+        ),
         padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
         decoration: BoxDecoration(
             color: Colors.deepPurple.withOpacity(0.2),
@@ -186,17 +224,30 @@ Widget myBubble(String txt,String time) => Align(
               topRight: Radius.circular(10.0),
               topLeft: Radius.circular(10.0),
             )),
-        child:Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+        child: Wrap(
+          alignment: WrapAlignment.end,
+          crossAxisAlignment: WrapCrossAlignment.end,
           children: [
-            Expanded(
-              child: Text(
-                txt,
-                style: TextStyle(fontSize: 15.0),
+            if(image != null)
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: Container(
+                child: Image(
+                  image: NetworkImage(image),
+                ),
               ),
             ),
-            SizedBox(width: 5.0,),
-            Text(time.substring(11,16)+" pm",style: TextStyle(fontSize:12.0),),
+            Text(
+              txt,
+              style: TextStyle(fontSize: 15.0),
+            ),
+            SizedBox(
+              width: 5.0,
+            ),
+            Text(
+              time.substring(11, 16) + " pm",
+              style: TextStyle(fontSize: 12.0),
+            ),
           ],
         ),
       ),

@@ -47,8 +47,7 @@ class HomeCubit extends Cubit<HomeStates> {
   List<String> titles = ['News Feeds', 'Chats', 'New Post', 'Users', 'Profile'];
 
   void changeBottomNav(int index) {
-    if(index == 1)
-      getAllUsers();
+    if (index == 1) getAllUsers();
     if (index == 2)
       emit(HomeNewPostState());
     else {
@@ -158,8 +157,46 @@ class HomeCubit extends Cubit<HomeStates> {
     }
   }
 
+  String chatImageUrl = '';
+  void uploadChatImage() {
+    emit(ChatImageUploadLoadingState());
+    firebase_storage.FirebaseStorage.instance
+        .ref()
+        .child('posts/${Uri.file(chatImage.path).pathSegments.last}')
+        .putFile(chatImage)
+        .then((value) {
+      value.ref.getDownloadURL().then((value) {
+        emit(ChatImageUploadSuccessState());
+        chatImageUrl = value;
+        print(value);
+      }).catchError((onError) {
+        emit(ChatImageUploadErrorState());
+      });
+    }).catchError((error) {
+      emit(ChatImageUploadErrorState());
+    });
+  }
+
+  File chatImage;
+  Future<void> getChatImage() async {
+    final pickedImage = await picker.getImage(source: ImageSource.gallery);
+    if (pickedImage != null) {
+      chatImage = File(pickedImage.path);
+      emit(ChatImagePickedSuccessState());
+      uploadChatImage();
+    } else {
+      emit(ChatImagePickedErrorState());
+      showToast(msg: 'No Image Selected', color: Colors.amber.withOpacity(0.6));
+    }
+  }
+
   void removePostImage() {
     postImage = null;
+    emit(PostImageRemoveState());
+  }
+
+  void removeChatImage() {
+    chatImage = null;
     emit(PostImageRemoveState());
   }
 
@@ -263,14 +300,18 @@ class HomeCubit extends Cubit<HomeStates> {
   void getComment({String postId}) {
     comments = [];
     emit(GetCommentLoadingState());
-    FirebaseFirestore.instance.collection('posts').doc(postId).get().then((value) {
+    FirebaseFirestore.instance
+        .collection('posts')
+        .doc(postId)
+        .get()
+        .then((value) {
       value.reference.collection('comments').get().then((value) {
         value.docs.forEach((element) {
           comments.add(CommentModel.fromJson(element.data()));
         });
         emit(GetCommentSuccessState());
       });
-    }).catchError((error){
+    }).catchError((error) {
       emit(GetCommentErrorState());
     });
   }
@@ -294,38 +335,41 @@ class HomeCubit extends Cubit<HomeStates> {
     });
   }
 
-  List<UserModel> users=[];
+  List<UserModel> users = [];
 
-  void getAllUsers(){
-    users=[];
+  void getAllUsers() {
+    users = [];
     emit(HomeGetAllUsersLoadingState());
     FirebaseFirestore.instance.collection('users').get().then((value) {
-      value.docs.forEach((element){
-        if(element.data()['uID'] != userModel.userID)
+      value.docs.forEach((element) {
+        if (element.data()['uID'] != userModel.userID)
           users.add(UserModel.fromJson(element.data()));
       });
     }).then((value) {
       emit(HomeGetAllUsersSuccessState());
-    }).catchError((error){
+    }).catchError((error) {
       emit(HomeGetAllUsersErrorState(error));
     });
   }
 
   void sendMessage({
-  @required String text,
-  @required String dateTime,
-  @required String receiverID,
-}){
-    MessageModel model = MessageModel(text, receiverID, userModel.userID, dateTime);
+    @required String text,
+    @required String dateTime,
+    @required String receiverID,
+    String image,
+  }) {
+    MessageModel model =
+        MessageModel(text, receiverID, userModel.userID, dateTime,image);
     FirebaseFirestore.instance
-    .collection('users')
-    .doc(userModel.userID)
-    .collection('chats')
-    .doc(receiverID)
-    .collection('messages')
-    .add(model.toMap()).then((value) {
+        .collection('users')
+        .doc(userModel.userID)
+        .collection('chats')
+        .doc(receiverID)
+        .collection('messages')
+        .add(model.toMap())
+        .then((value) {
       emit(SendMessageSuccessState());
-    }).catchError((error){
+    }).catchError((error) {
       emit(SendMessageErrorState());
     });
     FirebaseFirestore.instance
@@ -334,30 +378,32 @@ class HomeCubit extends Cubit<HomeStates> {
         .collection('chats')
         .doc(userModel.userID)
         .collection('messages')
-        .add(model.toMap()).then((value) {
+        .add(model.toMap())
+        .then((value) {
       emit(SendMessageSuccessState());
-    }).catchError((error){
+    }).catchError((error) {
       emit(SendMessageErrorState());
     });
   }
 
   List<MessageModel> messages = [];
-  void getMessages({@required String receiverID}){
+  void getMessages({@required String receiverID}) {
     emit(GetMessagesLoadingState());
     FirebaseFirestore.instance
-    .collection('users')
-    .doc(userModel.userID)
-    .collection('chats')
-    .doc(receiverID)
-    .collection('messages')
-    .orderBy('dateTime')
-    .snapshots()
-    .listen((event) {
+        .collection('users')
+        .doc(userModel.userID)
+        .collection('chats')
+        .doc(receiverID)
+        .collection('messages')
+        .orderBy('dateTime')
+        .snapshots()
+        .listen((event) {
       messages = [];
       event.docs.forEach((element) {
-          messages.add(MessageModel.fromJson(element.data()));
+        messages.add(MessageModel.fromJson(element.data()));
       });
       emit(GetMessagesSuccessState());
     });
   }
+
 }
