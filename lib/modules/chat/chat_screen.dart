@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:conditional_builder/conditional_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:social_app/layouts/cubit/cubit.dart';
 import 'package:social_app/layouts/cubit/states.dart';
 import 'package:social_app/shared/components/constants.dart';
@@ -9,17 +11,26 @@ import 'package:social_app/shared/styles/icon_broken.dart';
 class ChatScreen extends StatelessWidget {
   int index;
   ChatScreen(this.index);
+
   var msgController = TextEditingController();
+  var scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
     return Builder(builder: (context) {
-      // print(MediaQuery.of(context).size.width);
-      HomeCubit.get(context)
-          .getMessages(receiverID: HomeCubit.get(context).users[index].userID);
-
+      HomeCubit.get(context).getMessages(receiverID: HomeCubit.get(context).users[index].userID);
       return BlocConsumer<HomeCubit, HomeStates>(
         listener: (context, state) {},
         builder: (context, state) {
+          Timer(
+            Duration(seconds: 0),
+            () =>
+                scrollController.jumpTo(scrollController.position.extentAfter),
+          );
+          var messages = HomeCubit.get(context).messages;
+
+          DateTime labelDate = DateTime.parse(messages[0].dateTime);
+          DateTime date  = DateTime.parse(messages[0].dateTime);
+          bool flag ;
           return Scaffold(
             appBar: AppBar(
               iconTheme: IconThemeData(color: Colors.deepPurple),
@@ -50,32 +61,119 @@ class ChatScreen extends StatelessWidget {
             body: ConditionalBuilder(
               condition: state is! GetMessagesLoadingState,
               builder: (context) => Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.only(bottom: 20.0,left: 20.0,right: 20.0,top: 10.0),
                 child: Column(
                   children: [
                     Expanded(
-                      child: ListView.separated(
+                      child: SingleChildScrollView(
+                        controller: scrollController,
                         physics: BouncingScrollPhysics(),
-                        itemBuilder: (context, index) {
-                          if (HomeCubit.get(context).messages[index].senderID ==
-                              uId)
-                            return myBubble(
-                              HomeCubit.get(context).messages[index].text,
-                              HomeCubit.get(context).messages[index].dateTime,
-                              HomeCubit.get(context).messages[index].image,
-                              context,
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                             date = DateTime.parse(messages[index].dateTime);
+
+                            if((labelDate.day < date.day || labelDate.month < date.month ) && index != 0 ){
+                              flag = true;
+                              labelDate = date;
+                            }
+                            else{
+                              flag = false;
+                            }
+
+                            if (messages[index].senderID == uId)
+                              return Column(
+                                children: [
+                                  if(index == 0)
+                                    Container(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(5.0),
+                                        child: Text(
+                                          DateFormat('d MMM y').format(date),
+                                          style: TextStyle(color: Colors.black87),
+                                        ),
+                                      ),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(3),
+                                        color: Colors.lightGreenAccent
+                                            .withOpacity(0.3),
+                                      ),
+                                      margin: EdgeInsets.only(bottom: 15.0),
+                                    ),
+                                  if(flag && index != 0)
+                                    Container(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(5.0),
+                                        child: Text(
+                                          DateFormat('d MMM y').format(date),
+                                          style: TextStyle(color: Colors.black87),
+                                        ),
+                                      ),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(3),
+                                        color: Colors.lightGreenAccent
+                                            .withOpacity(0.3),
+                                      ),
+                                      margin: EdgeInsets.only(bottom: 15.0),
+                                    ),
+                                  myBubble(
+                                    messages[index].text,
+                                    date,
+                                    messages[index].image,
+                                    context,
+                                  ),
+                                ],
+                              );
+                            return Column(
+                              children: [
+                                if(index == 0)
+                                  Container(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(5.0),
+                                      child: Text(
+                                        DateFormat('d MMM y').format(date),
+                                        style: TextStyle(color: Colors.black87),
+                                      ),
+                                    ),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(3),
+                                      color: Colors.lightGreenAccent
+                                          .withOpacity(0.3),
+                                    ),
+                                    margin: EdgeInsets.only(bottom: 15.0),
+                                  ),
+                                if(flag && index != 0)
+                                  Container(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(5.0),
+                                      child: Text(
+                                        DateFormat('d MMM y').format(date),
+                                        style: TextStyle(color: Colors.black87),
+                                      ),
+                                    ),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(3),
+                                      color: Colors.lightGreenAccent
+                                          .withOpacity(0.3),
+                                    ),
+                                    margin: EdgeInsets.only(bottom: 15.0),
+                                  ),
+                                bubble(
+                                  messages[index].text,
+                                  date,
+                                  messages[index].image,
+                                  context,
+                                ),
+                              ],
                             );
-                          return bubble(
-                            HomeCubit.get(context).messages[index].text,
-                            HomeCubit.get(context).messages[index].dateTime,
-                            HomeCubit.get(context).messages[index].image,
-                            context,
-                          );
-                        },
-                        separatorBuilder: (context, index) => SizedBox(
-                          height: 15.0,
+
+                          },
+                          separatorBuilder: (context, index) => SizedBox(
+                            height: 15.0,
+                          ),
+                          itemCount: HomeCubit.get(context).messages.length,
                         ),
-                        itemCount: HomeCubit.get(context).messages.length,
                       ),
                     ),
                     //message text field
@@ -92,12 +190,15 @@ class ChatScreen extends StatelessWidget {
                         ),
                         child: Column(
                           children: [
-                            if(HomeCubit.get(context).chatImage != null)
+                            if (HomeCubit.get(context).chatImage != null)
                               Container(
-                                child: Image(image: FileImage(HomeCubit.get(context).chatImage),),
+                                child: Image(
+                                  image: FileImage(
+                                      HomeCubit.get(context).chatImage),
+                                ),
                                 height: 100,
                               ),
-                            if(state is ChatImageUploadLoadingState)
+                            if (state is ChatImageUploadLoadingState)
                               LinearProgressIndicator(),
                             Row(
                               children: [
@@ -124,23 +225,36 @@ class ChatScreen extends StatelessWidget {
                                 ),
                                 Container(
                                   height: 50.0,
-                                  color: state is ChatImageUploadLoadingState ? Colors.grey : Colors.deepPurple,
+                                  color: state is ChatImageUploadLoadingState
+                                      ? Colors.grey
+                                      : Colors.deepPurple,
                                   child: MaterialButton(
                                     minWidth: 1.0,
-                                    onPressed:state is ChatImageUploadLoadingState ? null: () {
-                                      if (msgController.text != '' || HomeCubit.get(context).chatImageUrl != null) {
-                                        HomeCubit.get(context).sendMessage(
-                                          text: msgController.text,
-                                          dateTime: DateTime.now().toString(),
-                                          receiverID: HomeCubit.get(context)
-                                              .users[index]
-                                              .userID,
-                                          image: HomeCubit.get(context).chatImageUrl ,
-                                        );
-                                        msgController.clear();
-                                        HomeCubit.get(context).removeChatImage();
-                                      }
-                                    },
+                                    onPressed: state
+                                            is ChatImageUploadLoadingState
+                                        ? null
+                                        : () {
+                                            if (msgController.text != '' ||
+                                                HomeCubit.get(context)
+                                                        .chatImageUrl !=
+                                                    null) {
+                                              HomeCubit.get(context)
+                                                  .sendMessage(
+                                                text: msgController.text,
+                                                dateTime:
+                                                    DateTime.now().toString(),
+                                                receiverID:
+                                                    HomeCubit.get(context)
+                                                        .users[index]
+                                                        .userID,
+                                                image: HomeCubit.get(context)
+                                                    .chatImageUrl,
+                                              );
+                                              msgController.clear();
+                                              HomeCubit.get(context)
+                                                  .removeChatImage();
+                                            }
+                                          },
                                     child: Icon(
                                       IconBroken.Send,
                                       color: Colors.white,
@@ -167,7 +281,7 @@ class ChatScreen extends StatelessWidget {
   }
 }
 
-Widget bubble(String txt, String time,String image, context) => Align(
+Widget bubble(String txt, DateTime time, String image, context) => Align(
       alignment: AlignmentDirectional.centerStart,
       child: Container(
         constraints: BoxConstraints(
@@ -185,15 +299,15 @@ Widget bubble(String txt, String time,String image, context) => Align(
           alignment: WrapAlignment.end,
           crossAxisAlignment: WrapCrossAlignment.end,
           children: [
-            if(image != null)
+            if (image != null)
               Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: Container(
-                child: Image(
-                  image: NetworkImage(image),
+                padding: const EdgeInsets.all(5.0),
+                child: Container(
+                  child: Image(
+                    image: NetworkImage(image),
+                  ),
                 ),
               ),
-            ),
             Text(
               txt,
               style: TextStyle(fontSize: 15.0),
@@ -202,7 +316,12 @@ Widget bubble(String txt, String time,String image, context) => Align(
               width: 5.0,
             ),
             Text(
-              time.substring(11, 16) + " pm",
+              (time.hour % 12 == 0 ? '12' : (time.hour % 12).toString()) +
+                  ':' +
+                  (time.minute < 10
+                      ? ('0' + time.minute.toString())
+                      : (time.minute.toString())) +
+                  (time.hour > 12 ? ' pm' : ' am'),
               style: TextStyle(fontSize: 12.0),
             ),
           ],
@@ -210,7 +329,7 @@ Widget bubble(String txt, String time,String image, context) => Align(
       ),
     );
 
-Widget myBubble(String txt, String time,String image, context) => Align(
+Widget myBubble(String txt, DateTime time, String image, context) => Align(
       alignment: AlignmentDirectional.centerEnd,
       child: Container(
         constraints: BoxConstraints(
@@ -228,15 +347,15 @@ Widget myBubble(String txt, String time,String image, context) => Align(
           alignment: WrapAlignment.end,
           crossAxisAlignment: WrapCrossAlignment.end,
           children: [
-            if(image != null)
-            Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: Container(
-                child: Image(
-                  image: NetworkImage(image),
+            if (image != null)
+              Padding(
+                padding: const EdgeInsets.all(5.0),
+                child: Container(
+                  child: Image(
+                    image: NetworkImage(image),
+                  ),
                 ),
               ),
-            ),
             Text(
               txt,
               style: TextStyle(fontSize: 15.0),
@@ -245,7 +364,12 @@ Widget myBubble(String txt, String time,String image, context) => Align(
               width: 5.0,
             ),
             Text(
-              time.substring(11, 16) + " pm",
+              (time.hour % 12 == 0 ? '12' : (time.hour % 12).toString()) +
+                  ':' +
+                  (time.minute < 10
+                      ? ('0' + time.minute.toString())
+                      : (time.minute.toString())) +
+                  (time.hour > 12 ? ' pm' : ' am'),
               style: TextStyle(fontSize: 12.0),
             ),
           ],
