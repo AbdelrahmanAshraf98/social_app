@@ -23,7 +23,7 @@ class AddCommentScreen extends StatelessWidget {
                   '\'s post'),
           body: ConditionalBuilder(
             condition: state is !GetCommentLoadingState,
-            builder: (context) => buildPost(
+            builder: (context) => buildPostComments(
               context,
               HomeCubit.get(context).posts[postIndex],
               HomeCubit.get(context).postsID[postIndex],
@@ -40,7 +40,7 @@ class AddCommentScreen extends StatelessWidget {
   }
 }
 
-Widget buildPost(context, PostModel model, String index,List<CommentModel>comments,int likes) {
+Widget buildPostComments(context, PostModel model, String index,List<CommentModel>comments,int likes) {
   var commentController = TextEditingController();
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 10.0),

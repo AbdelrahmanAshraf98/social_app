@@ -19,7 +19,7 @@ class PostModel {
     text = json['text'];
     postImage = json['postImage'];
     image = json['image'];
-    userID = json['uId'];
+    userID = json['uID'];
     name = json['name'];
     dateTime = json['dateTime'];
   }

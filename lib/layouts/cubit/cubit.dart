@@ -178,7 +178,7 @@ class HomeCubit extends Cubit<HomeStates> {
   }
 
   File chatImage;
-  Future<void> getChatImage() async {
+  Future<void> getChatImageGallery() async {
     final pickedImage = await picker.getImage(source: ImageSource.gallery);
     if (pickedImage != null) {
       chatImage = File(pickedImage.path);
@@ -190,6 +190,19 @@ class HomeCubit extends Cubit<HomeStates> {
     }
   }
 
+  Future<void> getChatImageCamera() async {
+    final pickedImage = await picker.getImage(source: ImageSource.camera);
+    if (pickedImage != null) {
+      chatImage = File(pickedImage.path);
+      emit(ChatImagePickedSuccessState());
+      uploadChatImage();
+    } else {
+      emit(ChatImagePickedErrorState());
+      showToast(msg: 'No Image Selected', color: Colors.amber.withOpacity(0.6));
+    }
+  }
+
+
   void removePostImage() {
     postImage = null;
     emit(PostImageRemoveState());
@@ -197,6 +210,7 @@ class HomeCubit extends Cubit<HomeStates> {
 
   void removeChatImage() {
     chatImage = null;
+    chatImageUrl = null;
     emit(PostImageRemoveState());
   }
 
@@ -369,6 +383,8 @@ class HomeCubit extends Cubit<HomeStates> {
         .add(model.toMap())
         .then((value) {
       emit(SendMessageSuccessState());
+      if(chatImageUrl != null)
+        removeChatImage();
     }).catchError((error) {
       emit(SendMessageErrorState());
     });

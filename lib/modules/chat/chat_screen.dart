@@ -5,8 +5,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:social_app/layouts/cubit/cubit.dart';
 import 'package:social_app/layouts/cubit/states.dart';
+import 'package:social_app/modules/profile/user_profile.dart';
+import 'package:social_app/shared/components/components.dart';
 import 'package:social_app/shared/components/constants.dart';
 import 'package:social_app/shared/styles/icon_broken.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 class ChatScreen extends StatelessWidget {
   int index;
@@ -17,70 +21,81 @@ class ChatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Builder(builder: (context) {
-      HomeCubit.get(context).getMessages(receiverID: HomeCubit.get(context).users[index].userID);
+      HomeCubit.get(context)
+          .getMessages(receiverID: HomeCubit.get(context).users[index].userID);
       return BlocConsumer<HomeCubit, HomeStates>(
-        listener: (context, state) {},
+        listener: (context, state) {
+          if (state is GetMessagesSuccessState)
+            Timer(
+              Duration(milliseconds: 300),
+              () => scrollController
+                  .jumpTo(scrollController.position.maxScrollExtent),
+            );
+        },
         builder: (context, state) {
-          Timer(
-            Duration(seconds: 0),
-            () =>
-                scrollController.jumpTo(scrollController.position.extentAfter),
-          );
           var messages = HomeCubit.get(context).messages;
-
           DateTime labelDate = DateTime.parse(messages[0].dateTime);
-          DateTime date  = DateTime.parse(messages[0].dateTime);
-          bool flag ;
+          DateTime date = DateTime.parse(messages[0].dateTime);
+          bool flag = true;
           return Scaffold(
             appBar: AppBar(
+              elevation: 1.0,
               iconTheme: IconThemeData(color: Colors.deepPurple),
               titleSpacing: 0.0,
-              title: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundImage:
-                        NetworkImage(HomeCubit.get(context).users[index].image),
-                    radius: 20.0,
-                  ),
-                  SizedBox(width: 15.0),
-                  Text(
-                    HomeCubit.get(context).users[index].name,
-                    style: TextStyle(
-                        height: 1.4,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16.0,
-                        color: Colors.deepPurple),
-                  ),
-                  Spacer(),
-                  IconButton(icon: Icon(IconBroken.Call), onPressed: () {}),
-                  IconButton(
-                      icon: Icon(IconBroken.Info_Square), onPressed: () {}),
-                ],
+              title: InkWell(
+                onTap: (){
+                  navigateTo(UserProfileScreen(index), context);
+                },
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundImage:
+                          NetworkImage(HomeCubit.get(context).users[index].image),
+                      radius: 20.0,
+                    ),
+                    SizedBox(width: 15.0),
+                    Text(
+                      HomeCubit.get(context).users[index].name,
+                      style: TextStyle(
+                          height: 1.4,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16.0,
+                          color: Colors.deepPurple),
+                    ),
+                  ],
+                ),
               ),
+              actions: [
+                IconButton(icon: Icon(IconBroken.Call), onPressed: () {
+                  launch("tel://01033179558");
+                }),
+                PopupMenuButton(
+                  icon: Icon(IconBroken.Info_Square),
+                    itemBuilder: (context){
+                  return [PopupMenuItem(child: Text('Clear Chat'),value: '2',)];
+                }),
+              ],
             ),
             body: ConditionalBuilder(
               condition: state is! GetMessagesLoadingState,
               builder: (context) => Padding(
-                padding: const EdgeInsets.only(bottom: 20.0,left: 20.0,right: 20.0,top: 10.0),
+                padding: const EdgeInsets.only(
+                    bottom: 20.0, left: 20.0, right: 20.0),
                 child: Column(
                   children: [
                     Expanded(
-                      child: SingleChildScrollView(
+                      child: ListView.separated(
                         controller: scrollController,
+                        shrinkWrap: true,
                         physics: BouncingScrollPhysics(),
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemBuilder: (context, index) {
-                             date = DateTime.parse(messages[index].dateTime);
-
-                            if((labelDate.day < date.day || labelDate.month < date.month ) && index != 0 ){
-                              flag = true;
-                              labelDate = date;
-                            }
-                            else{
-                              flag = false;
-                            }
+                        itemBuilder: (context, index) {
+                          bool sizedBox = false;
+                          date = DateTime.parse(messages[index].dateTime);
+                          if (labelDate.day < date.day || labelDate.month < date.month) {
+                            flag = true;
+                            labelDate = date;
+                          } else
+                            flag = false;
 
                             if (messages[index].senderID == uId)
                               return Column(
@@ -99,7 +114,7 @@ class ChatScreen extends StatelessWidget {
                                         color: Colors.lightGreenAccent
                                             .withOpacity(0.3),
                                       ),
-                                      margin: EdgeInsets.only(bottom: 15.0),
+                                      margin: EdgeInsets.only(bottom: 10.0,top: 5.0),
                                     ),
                                   if(flag && index != 0)
                                     Container(
@@ -115,7 +130,7 @@ class ChatScreen extends StatelessWidget {
                                         color: Colors.lightGreenAccent
                                             .withOpacity(0.3),
                                       ),
-                                      margin: EdgeInsets.only(bottom: 15.0),
+                                      margin: EdgeInsets.only(bottom: 10.0,top: 5.0),
                                     ),
                                   myBubble(
                                     messages[index].text,
@@ -141,7 +156,7 @@ class ChatScreen extends StatelessWidget {
                                       color: Colors.lightGreenAccent
                                           .withOpacity(0.3),
                                     ),
-                                    margin: EdgeInsets.only(bottom: 15.0),
+                                    margin: EdgeInsets.only(bottom: 10.0,top: 5.0),
                                   ),
                                 if(flag && index != 0)
                                   Container(
@@ -157,7 +172,7 @@ class ChatScreen extends StatelessWidget {
                                       color: Colors.lightGreenAccent
                                           .withOpacity(0.3),
                                     ),
-                                    margin: EdgeInsets.only(bottom: 15.0),
+                                    margin: EdgeInsets.only(bottom: 10.0,top: 5.0),
                                   ),
                                 bubble(
                                   messages[index].text,
@@ -170,15 +185,14 @@ class ChatScreen extends StatelessWidget {
 
                           },
                           separatorBuilder: (context, index) => SizedBox(
-                            height: 15.0,
+                            height: 5.0,
                           ),
                           itemCount: HomeCubit.get(context).messages.length,
                         ),
                       ),
-                    ),
                     //message text field
                     Padding(
-                      padding: const EdgeInsets.only(top: 10.0),
+                      padding: const EdgeInsets.only(top: 15.0),
                       child: Container(
                         clipBehavior: Clip.antiAliasWithSaveLayer,
                         decoration: BoxDecoration(
@@ -204,9 +218,15 @@ class ChatScreen extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10.0),
+                                    padding: const EdgeInsets.only(
+                                        left: 10.0),
                                     child: TextFormField(
+                                      onTap: () => Timer(
+                                        Duration(milliseconds: 300),
+                                        () => scrollController.jumpTo(
+                                            scrollController
+                                                .position.maxScrollExtent),
+                                      ),
                                       controller: msgController,
                                       decoration: InputDecoration(
                                           border: InputBorder.none,
@@ -220,7 +240,16 @@ class ChatScreen extends StatelessWidget {
                                     color: Colors.deepPurple,
                                   ),
                                   onPressed: () {
-                                    HomeCubit.get(context).getChatImage();
+                                    HomeCubit.get(context).getChatImageGallery();
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    IconBroken.Camera,
+                                    color: Colors.deepPurple,
+                                  ),
+                                  onPressed: () {
+                                    HomeCubit.get(context).getChatImageCamera();
                                   },
                                 ),
                                 Container(
@@ -251,8 +280,6 @@ class ChatScreen extends StatelessWidget {
                                                     .chatImageUrl,
                                               );
                                               msgController.clear();
-                                              HomeCubit.get(context)
-                                                  .removeChatImage();
                                             }
                                           },
                                     child: Icon(
@@ -281,98 +308,102 @@ class ChatScreen extends StatelessWidget {
   }
 }
 
-Widget bubble(String txt, DateTime time, String image, context) => Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.7,
-        ),
-        padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
-        decoration: BoxDecoration(
-            color: Colors.grey[300],
-            borderRadius: BorderRadius.only(
-              bottomRight: Radius.circular(10.0),
-              topRight: Radius.circular(10.0),
-              topLeft: Radius.circular(10.0),
-            )),
-        child: Wrap(
-          alignment: WrapAlignment.end,
-          crossAxisAlignment: WrapCrossAlignment.end,
-          children: [
-            if (image != null)
-              Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: Container(
-                  child: Image(
-                    image: NetworkImage(image),
-                  ),
+Widget bubble(String txt, DateTime time, String image, context) {
+  return Align(
+    alignment: AlignmentDirectional.centerStart,
+    child: Container(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 0.7,
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+      decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.only(
+            bottomRight: Radius.circular(10.0),
+            topRight: Radius.circular(10.0),
+            topLeft: Radius.circular(10.0),
+          )),
+      child: Wrap(
+        alignment: WrapAlignment.end,
+        crossAxisAlignment: WrapCrossAlignment.end,
+        children: [
+          if (image != null && image != '')
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: Container(
+                child: Image(
+                  image: NetworkImage(image),
                 ),
               ),
-            Text(
-              txt,
-              style: TextStyle(fontSize: 15.0),
             ),
-            SizedBox(
-              width: 5.0,
-            ),
-            Text(
-              (time.hour % 12 == 0 ? '12' : (time.hour % 12).toString()) +
-                  ':' +
-                  (time.minute < 10
-                      ? ('0' + time.minute.toString())
-                      : (time.minute.toString())) +
-                  (time.hour > 12 ? ' pm' : ' am'),
-              style: TextStyle(fontSize: 12.0),
-            ),
-          ],
-        ),
+          Text(
+            txt,
+            style: TextStyle(fontSize: 15.0),
+          ),
+          SizedBox(
+            width: 5.0,
+          ),
+          Text(
+            (time.hour % 12 == 0 ? '12' : (time.hour % 12).toString()) +
+                ':' +
+                (time.minute < 10
+                    ? ('0' + time.minute.toString())
+                    : (time.minute.toString())) +
+                (time.hour > 12 ? ' pm' : ' am'),
+            style: TextStyle(fontSize: 12.0),
+          ),
+        ],
       ),
-    );
+    ),
+  );
+}
 
-Widget myBubble(String txt, DateTime time, String image, context) => Align(
-      alignment: AlignmentDirectional.centerEnd,
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.7,
-        ),
-        padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
-        decoration: BoxDecoration(
-            color: Colors.deepPurple.withOpacity(0.2),
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(10.0),
-              topRight: Radius.circular(10.0),
-              topLeft: Radius.circular(10.0),
-            )),
-        child: Wrap(
-          alignment: WrapAlignment.end,
-          crossAxisAlignment: WrapCrossAlignment.end,
-          children: [
-            if (image != null)
-              Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: Container(
-                  child: Image(
-                    image: NetworkImage(image),
-                  ),
+Widget myBubble(String txt, DateTime time, String image, context) {
+  return Align(
+    alignment: AlignmentDirectional.centerEnd,
+    child: Container(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 0.7,
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+      decoration: BoxDecoration(
+          color: Colors.deepPurple.withOpacity(0.2),
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(10.0),
+            topRight: Radius.circular(10.0),
+            topLeft: Radius.circular(10.0),
+          )),
+      child: Wrap(
+        alignment: WrapAlignment.end,
+        crossAxisAlignment: WrapCrossAlignment.end,
+        children: [
+          if (image != null && image != '')
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: Container(
+                child: Image(
+                  image: NetworkImage(image),
                 ),
               ),
-            Text(
-              txt,
-              style: TextStyle(fontSize: 15.0),
             ),
-            SizedBox(
-              width: 5.0,
-            ),
-            Text(
-              (time.hour % 12 == 0 ? '12' : (time.hour % 12).toString()) +
-                  ':' +
-                  (time.minute < 10
-                      ? ('0' + time.minute.toString())
-                      : (time.minute.toString())) +
-                  (time.hour > 12 ? ' pm' : ' am'),
-              style: TextStyle(fontSize: 12.0),
-            ),
-          ],
-        ),
+          Text(
+            txt,
+            style: TextStyle(fontSize: 15.0,),
+          ),
+          SizedBox(
+            width: 5.0,
+          ),
+          Text(
+            (time.hour % 12 == 0 ? '12' : (time.hour % 12).toString()) +
+                ':' +
+                (time.minute < 10
+                    ? ('0' + time.minute.toString())
+                    : (time.minute.toString())) +
+                (time.hour > 12 ? ' pm' : ' am'),
+            style: TextStyle(fontSize: 12.0),
+          ),
+        ],
       ),
-    );
+    ),
+  );
+}
